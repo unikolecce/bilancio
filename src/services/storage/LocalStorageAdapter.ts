@@ -17,7 +17,7 @@ function detectLanguage(): Language {
       if ((SUPPORTED as string[]).includes(prefix)) return prefix as Language
     }
   } catch { /* non-browser environment */ }
-  return 'it'
+  return 'en'
 }
 
 // Evaluated once at module load — picks up the OS/browser language on first run.
