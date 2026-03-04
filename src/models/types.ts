@@ -73,6 +73,7 @@ export interface Settings {
   currency: Currency
   language: Language
   onboardingComplete: boolean
+  notificationsEnabled: boolean
 }
 
 // ─── Savings Jars ─────────────────────────────────────────────────────────────

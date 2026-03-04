@@ -11,6 +11,7 @@ import { CashFlowView } from '../components/budget/CashFlowView'
 import { ItemFormModal } from '../components/budget/ItemFormModal'
 import { QuickAddForm } from '../components/budget/QuickAddForm'
 import { PreviousBalanceBanner } from '../components/budget/PreviousBalanceBanner'
+import { BudgetAlerts } from '../components/budget/BudgetAlerts'
 import { QuickSavingsDeposit } from '../components/budget/QuickSavingsDeposit'
 import { Button } from '../components/ui/Button'
 import type { BudgetItem } from '../models/types'
@@ -166,6 +167,9 @@ export const DashboardMonth: React.FC = () => {
 
       {/* Previous month balance banner */}
       <PreviousBalanceBanner month={budgetMonth} />
+
+      {/* In-app alerts */}
+      <BudgetAlerts month={budgetMonth} />
 
       {/* Summary cards */}
       <SummaryCards month={budgetMonth} />

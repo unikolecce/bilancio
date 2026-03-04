@@ -27,6 +27,7 @@ const DEFAULT_SETTINGS: Settings = {
   currency: 'EUR',
   language: browserLang,
   onboardingComplete: false,
+  notificationsEnabled: false,
 }
 
 export const DEFAULT_DATA: AppData = {

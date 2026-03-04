@@ -33,6 +33,7 @@ interface AppActions {
   // ── Settings ──────────────────────────────────────────────────────────────
   setLanguage(lang: Language): void
   setCurrency(currency: Currency): void
+  setNotificationsEnabled(enabled: boolean): void
   completeOnboarding(): void
 
   // ── Months ────────────────────────────────────────────────────────────────
@@ -152,6 +153,10 @@ export const useAppStore = create<AppStore>((set, get) => {
     },
     setCurrency(currency) {
       set((s) => ({ settings: { ...s.settings, currency } }))
+      save()
+    },
+    setNotificationsEnabled(enabled) {
+      set((s) => ({ settings: { ...s.settings, notificationsEnabled: enabled } }))
       save()
     },
     completeOnboarding() {

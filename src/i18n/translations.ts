@@ -144,6 +144,13 @@ export const translations = {
       currency: 'Valuta predefinita',
       language: 'Lingua',
     },
+    alerts: {
+      negativeBalanceTitle: 'Saldo previsto negativo',
+      negativeBalanceDescription: 'Attenzione: saldo previsto sotto zero di',
+      overdueTitle: 'Spese scadute non pagate',
+      dueSoonTitle: 'Spese in scadenza (3 giorni)',
+      itemsDue: 'voci da controllare',
+    },
   },
 
   en: {
@@ -291,6 +298,13 @@ export const translations = {
       currency: 'Default currency',
       language: 'Language',
     },
+    alerts: {
+      negativeBalanceTitle: 'Projected negative balance',
+      negativeBalanceDescription: 'Warning: projected shortfall of',
+      overdueTitle: 'Overdue unpaid expenses',
+      dueSoonTitle: 'Expenses due soon (3 days)',
+      itemsDue: 'items to review',
+    },
   },
 
   de: {
@@ -437,6 +451,13 @@ export const translations = {
       title: 'Einstellungen',
       currency: 'Standardwährung',
       language: 'Sprache',
+    },
+    alerts: {
+      negativeBalanceTitle: 'Voraussichtliches negatives Saldo',
+      negativeBalanceDescription: 'Achtung: voraussichtliches Defizit von',
+      overdueTitle: 'Überfällige unbezahlte Ausgaben',
+      dueSoonTitle: 'Bald fällige Ausgaben (3 Tage)',
+      itemsDue: 'Einträge zu prüfen',
     },
   },
 } as const
