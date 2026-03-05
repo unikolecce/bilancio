@@ -82,31 +82,31 @@ export const SummaryCards: React.FC<SummaryCardsProps> = ({ month }) => {
           </svg>
         }
       />
+      {/* Saldo a oggi = entrate ricevute - uscite già pagate */}
+      <Card
+        label={t('summary.todayBalance')}
+        amount={Math.abs(s.todayBalance)}
+        currency={month.currency}
+        colorClass={s.todayBalance >= 0 ? 'text-indigo-700' : 'text-rose-700'}
+        bgClass={s.todayBalance >= 0 ? 'bg-indigo-50' : 'bg-rose-100'}
+        icon={
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+        }
+      />
       {/* Saldo previsto = entrate - tutte le uscite */}
       <Card
         label={t('summary.balance')}
         amount={Math.abs(s.balance)}
         currency={month.currency}
-        colorClass={balancePositive ? 'text-indigo-700' : 'text-rose-700'}
-        bgClass={balancePositive ? 'bg-indigo-50' : 'bg-rose-100'}
+        colorClass={balancePositive ? 'text-violet-700' : 'text-rose-700'}
+        bgClass={balancePositive ? 'bg-violet-50' : 'bg-rose-100'}
         icon={
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
               d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
-          </svg>
-        }
-      />
-      {/* Spese pianificate non ancora pagate */}
-      <Card
-        label={t('summary.plannedRemaining')}
-        amount={s.plannedRemaining}
-        currency={month.currency}
-        colorClass="text-amber-700"
-        bgClass="bg-amber-50"
-        icon={
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
         }
       />

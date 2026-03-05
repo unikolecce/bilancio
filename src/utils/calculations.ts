@@ -14,24 +14,21 @@ export const computeMonthSummary = (month: BudgetMonth): MonthSummary => {
   let totalExpenses = 0
   let paidExpenses = 0
   let plannedRemaining = 0
+  let receivedIncome = 0
 
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
   for (const item of month.items) {
+    // An item is "settled today" if manually paid OR has a date <= today
+    const settledToday = item.paid || (!!item.date && new Date(item.date) <= today)
+
     if (item.type === 'INCOME') {
       totalIncome += item.amount
+      if (settledToday) receivedIncome += item.amount
     } else {
       totalExpenses += item.amount
-
-      // An expense is "paid" if:
-      //   • manually marked paid, OR
-      //   • has a date that is today or in the past (already debited)
-      const effectivelyPaid =
-        item.paid ||
-        (!!item.date && new Date(item.date) <= today)
-
-      if (effectivelyPaid) {
+      if (settledToday) {
         paidExpenses += item.amount
       } else if (item.planned) {
         plannedRemaining += item.amount
@@ -44,6 +41,7 @@ export const computeMonthSummary = (month: BudgetMonth): MonthSummary => {
     totalExpenses,
     paidExpenses,
     balance: totalIncome - totalExpenses,
+    todayBalance: receivedIncome - paidExpenses,
     plannedRemaining,
   }
 }

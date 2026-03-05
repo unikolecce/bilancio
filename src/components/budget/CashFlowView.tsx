@@ -45,7 +45,7 @@ export const CashFlowView: React.FC<CashFlowViewProps> = ({ month, categoryId, s
   const runningMap = useMemo<Map<string, number>>(() => {
     const map = new Map<string, number>()
     let acc = 0
-    const displayOrder = [...undatedIncome, ...undatedExpense, ...datedItems]
+    const displayOrder = [...undatedIncome, ...datedItems, ...undatedExpense]
     for (const item of displayOrder) {
       acc += item.type === 'INCOME' ? item.amount : -item.amount
       map.set(item.id, acc)
@@ -135,16 +135,6 @@ export const CashFlowView: React.FC<CashFlowViewProps> = ({ month, categoryId, s
         </>
       )}
 
-      {/* Undated expenses */}
-      {undatedExpense.length > 0 && (
-        <>
-          <div className="px-4 py-2 bg-slate-50/70 border-b border-slate-100">
-            <p className="text-xs font-semibold text-slate-500">Uscite senza data</p>
-          </div>
-          {undatedExpense.map((item) => <ItemRow key={item.id} item={item} />)}
-        </>
-      )}
-
       {/* Dated groups */}
       {groups.map(([date, items]) => {
         const dayNet = items.reduce(
@@ -163,6 +153,16 @@ export const CashFlowView: React.FC<CashFlowViewProps> = ({ month, categoryId, s
           </React.Fragment>
         )
       })}
+
+      {/* Undated expenses — at end of month */}
+      {undatedExpense.length > 0 && (
+        <>
+          <div className="px-4 py-2 bg-slate-50/70 border-b border-slate-100 border-t border-slate-100">
+            <p className="text-xs font-semibold text-slate-500">Uscite ricorrenti</p>
+          </div>
+          {undatedExpense.map((item) => <ItemRow key={item.id} item={item} />)}
+        </>
+      )}
 
       {/* Final balance footer */}
       <div className="px-4 py-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between">

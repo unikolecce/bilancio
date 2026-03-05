@@ -241,54 +241,90 @@ export const StatsDashboard: React.FC = () => {
       )}
 
       {/* Monthly trend */}
-      {trendMonths.length > 1 && (
+      {trendMonths.length > 0 && (
         <div className="bg-white rounded-xl border border-slate-200 p-5">
           <h2 className="text-sm font-semibold text-slate-700 mb-5">{t('stats.monthlyTrend')}</h2>
 
-          {/* Bar chart */}
-          <div className="flex items-end gap-2 h-32">
-            {trendMonths.map((m) => {
-              const s = computeMonthSummary(m)
-              const incPct = (s.totalIncome / maxTrendVal) * 100
-              const expPct = (s.totalExpenses / maxTrendVal) * 100
-              return (
-                <div key={m.id} className="flex-1 flex flex-col items-center gap-1">
-                  <div className="flex items-end gap-0.5 h-24 w-full">
-                    {/* Income bar */}
-                    <div className="flex-1 flex flex-col justify-end">
-                      <div
-                        className="bg-emerald-400 rounded-t-sm transition-all duration-500"
-                        style={{ height: `${incPct}%` }}
-                        title={`Entrate: ${formatCurrency(s.totalIncome, currency)}`}
-                      />
+          {/* Bar chart — only meaningful with 2+ months */}
+          {trendMonths.length > 1 && (
+            <>
+              <div className="flex items-end gap-2 h-32">
+                {trendMonths.map((m) => {
+                  const s = computeMonthSummary(m)
+                  const incPct = (s.totalIncome / maxTrendVal) * 100
+                  const expPct = (s.totalExpenses / maxTrendVal) * 100
+                  return (
+                    <div key={m.id} className="flex-1 flex flex-col items-center gap-1">
+                      <div className="flex items-end gap-0.5 h-24 w-full">
+                        <div className="flex-1 flex flex-col justify-end">
+                          <div
+                            className="bg-emerald-400 rounded-t-sm transition-all duration-500"
+                            style={{ height: `${incPct}%` }}
+                            title={`Entrate: ${formatCurrency(s.totalIncome, currency)}`}
+                          />
+                        </div>
+                        <div className="flex-1 flex flex-col justify-end">
+                          <div
+                            className="bg-rose-400 rounded-t-sm transition-all duration-500"
+                            style={{ height: `${expPct}%` }}
+                            title={`Uscite: ${formatCurrency(s.totalExpenses, currency)}`}
+                          />
+                        </div>
+                      </div>
+                      <span className="text-[10px] text-slate-500 text-center leading-tight">
+                        {getMonthName(m.month, language).slice(0, 3)}
+                      </span>
                     </div>
-                    {/* Expense bar */}
-                    <div className="flex-1 flex flex-col justify-end">
-                      <div
-                        className="bg-rose-400 rounded-t-sm transition-all duration-500"
-                        style={{ height: `${expPct}%` }}
-                        title={`Uscite: ${formatCurrency(s.totalExpenses, currency)}`}
-                      />
-                    </div>
-                  </div>
-                  <span className="text-[10px] text-slate-500 text-center leading-tight">
-                    {getMonthName(m.month, language).slice(0, 3)}
-                  </span>
+                  )
+                })}
+              </div>
+              <div className="flex items-center gap-4 mt-3 mb-5">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-3 h-3 bg-emerald-400 rounded-sm" />
+                  <span className="text-xs text-slate-500">{t('summary.totalIncome')}</span>
                 </div>
-              )
-            })}
-          </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-3 h-3 bg-rose-400 rounded-sm" />
+                  <span className="text-xs text-slate-500">{t('summary.totalExpenses')}</span>
+                </div>
+              </div>
+            </>
+          )}
 
-          {/* Legend */}
-          <div className="flex items-center gap-4 mt-3">
-            <div className="flex items-center gap-1.5">
-              <span className="w-3 h-3 bg-emerald-400 rounded-sm" />
-              <span className="text-xs text-slate-500">{t('summary.totalIncome')}</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="w-3 h-3 bg-rose-400 rounded-sm" />
-              <span className="text-xs text-slate-500">{t('summary.totalExpenses')}</span>
-            </div>
+          {/* Monthly table */}
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-slate-100">
+                  <th className="text-left py-2 text-xs font-semibold text-slate-500 uppercase tracking-wide">Mese</th>
+                  <th className="text-right py-2 text-xs font-semibold text-emerald-600 uppercase tracking-wide">Entrate</th>
+                  <th className="text-right py-2 text-xs font-semibold text-rose-600 uppercase tracking-wide">Uscite</th>
+                  <th className="text-right py-2 text-xs font-semibold text-slate-500 uppercase tracking-wide">Saldo</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[...months].reverse().map((m) => {
+                  const s = computeMonthSummary(m)
+                  const bal = s.balance
+                  return (
+                    <tr key={m.id} className="border-b border-slate-50 hover:bg-slate-50">
+                      <td className="py-2.5 text-slate-700 font-medium">
+                        {getMonthName(m.month, language)} {m.year}
+                      </td>
+                      <td className="py-2.5 text-right tabular-nums text-emerald-600">
+                        +{formatCurrency(s.totalIncome, currency)}
+                      </td>
+                      <td className="py-2.5 text-right tabular-nums text-rose-600">
+                        -{formatCurrency(s.totalExpenses, currency)}
+                      </td>
+                      <td className={`py-2.5 text-right tabular-nums font-semibold ${bal >= 0 ? 'text-indigo-600' : 'text-rose-600'}`}>
+                        {bal >= 0 ? '+' : ''}{formatCurrency(bal, currency)}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
           </div>
         </div>
       )}

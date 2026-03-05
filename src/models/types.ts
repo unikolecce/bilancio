@@ -114,6 +114,7 @@ export interface MonthSummary {
   totalExpenses: number   // all expenses (paid + planned) — used for balance
   paidExpenses: number    // only paid expenses — shown in the summary card
   balance: number         // totalIncome - totalExpenses (projected end-of-month)
+  todayBalance: number    // income received to date minus expenses paid to date
   plannedRemaining: number // planned but not yet paid
 }
 
