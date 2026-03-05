@@ -22,10 +22,17 @@ const totalInvested = (jar: SavingsJar): number =>
     .filter((t) => t.type === 'DEPOSIT')
     .reduce((s, t) => s + t.amount, 0)
 
+const sortByDateDesc = (a: { date: string; createdAt: string }, b: { date: string; createdAt: string }) => {
+  const d = b.date.localeCompare(a.date)
+  return d !== 0 ? d : b.createdAt.localeCompare(a.createdAt)
+}
+
+const sortByDateAsc = (a: { date: string; createdAt: string }, b: { date: string; createdAt: string }) => -sortByDateDesc(a, b)
+
 const currentValue = (jar: SavingsJar): number | null => {
   const updates = jar.investmentUpdates ?? []
   if (updates.length === 0) return null
-  return [...updates].sort((a, b) => b.date.localeCompare(a.date))[0].value
+  return [...updates].sort(sortByDateDesc)[0].value
 }
 
 // ─── Jar Form Modal ───────────────────────────────────────────────────────────
@@ -370,7 +377,7 @@ const InvStatsModal: React.FC<InvStatsModalProps> = ({ open, onClose, jarId }) =
 
   // Compute directly (no memo) so it's always in sync with the live jar
   const updates = jar
-    ? [...(jar.investmentUpdates ?? [])].sort((a, b) => a.date.localeCompare(b.date))
+    ? [...(jar.investmentUpdates ?? [])].sort(sortByDateAsc)
     : []
 
   const invested = jar ? totalInvested(jar) : 0
@@ -593,7 +600,7 @@ const JarCard: React.FC<JarCardProps> = ({
   const curValue = currentValue(jar)
   // If no deposits/initialValue, fall back to earliest snapshot as cost basis
   const updates = jar.investmentUpdates ?? []
-  const sortedUpdates = [...updates].sort((a, b) => a.date.localeCompare(b.date))
+  const sortedUpdates = [...updates].sort(sortByDateAsc)
   const baseline = invested > 0 ? invested : (sortedUpdates.length > 0 ? sortedUpdates[0].value : 0)
   const gain = curValue != null ? curValue - baseline : null
   const gainPct = gain != null && baseline > 0 ? (gain / baseline) * 100 : null
