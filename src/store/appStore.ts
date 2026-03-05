@@ -440,6 +440,7 @@ export const useAppStore = create<AppStore>((set, get) => {
         id,
         ...jar,
         transactions: [],
+        investmentUpdates: [],
         createdAt: new Date().toISOString(),
       }
       set((s) => ({ savingsJars: [...s.savingsJars, newJar] }))

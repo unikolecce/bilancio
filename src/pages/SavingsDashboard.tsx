@@ -278,12 +278,14 @@ const TxModal: React.FC<TxModalProps> = ({ open, onClose, jar, defaultType }) =>
 interface InvUpdateModalProps {
   open: boolean
   onClose(): void
-  jar: SavingsJar
+  jarId: string
 }
 
-const InvUpdateModal: React.FC<InvUpdateModalProps> = ({ open, onClose, jar }) => {
+const InvUpdateModal: React.FC<InvUpdateModalProps> = ({ open, onClose, jarId }) => {
   const addInvestmentUpdate = useAppStore((s) => s.addInvestmentUpdate)
   const settings = useAppStore((s) => s.settings)
+  // Read jar live from store so invested amount is always fresh
+  const jar = useAppStore((s) => s.savingsJars.find((j) => j.id === jarId))
 
   const [valueRaw, setValueRaw] = useState('')
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10))
@@ -297,6 +299,8 @@ const InvUpdateModal: React.FC<InvUpdateModalProps> = ({ open, onClose, jar }) =
     setNote('')
     setError('')
   }, [open])
+
+  if (!jar) return null
 
   const invested = totalInvested(jar)
 
@@ -347,12 +351,13 @@ const InvUpdateModal: React.FC<InvUpdateModalProps> = ({ open, onClose, jar }) =
 interface InvStatsModalProps {
   open: boolean
   onClose(): void
-  jar: SavingsJar | null
+  jarId: string | null
 }
 
-const InvStatsModal: React.FC<InvStatsModalProps> = ({ open, onClose, jar }) => {
+const InvStatsModal: React.FC<InvStatsModalProps> = ({ open, onClose, jarId }) => {
   const settings = useAppStore((s) => s.settings)
   const deleteInvestmentUpdate = useAppStore((s) => s.deleteInvestmentUpdate)
+  const jar = useAppStore((s) => s.savingsJars.find((j) => j.id === jarId) ?? null)
 
   const updates = useMemo(() => {
     if (!jar) return []
@@ -748,8 +753,8 @@ export const SavingsDashboard: React.FC = () => {
   const [txJar, setTxJar] = useState<SavingsJar | null>(null)
   const [txType, setTxType] = useState<'DEPOSIT' | 'WITHDRAWAL'>('DEPOSIT')
   const [historyJar, setHistoryJar] = useState<SavingsJar | null>(null)
-  const [invUpdateJar, setInvUpdateJar] = useState<SavingsJar | null>(null)
-  const [statsJar, setStatsJar] = useState<SavingsJar | null>(null)
+  const [invUpdateJar, setInvUpdateJar] = useState<string | null>(null)
+  const [statsJar, setStatsJar] = useState<string | null>(null)
 
   const settings = useAppStore((s) => s.settings)
 
@@ -937,8 +942,8 @@ export const SavingsDashboard: React.FC = () => {
               onDeposit={() => { setTxJar(jar); setTxType('DEPOSIT') }}
               onWithdraw={() => { setTxJar(jar); setTxType('WITHDRAWAL') }}
               onShowTx={() => setHistoryJar(jar)}
-              onUpdateValue={() => setInvUpdateJar(jar)}
-              onShowStats={() => setStatsJar(jar)}
+              onUpdateValue={() => setInvUpdateJar(jar.id)}
+              onShowStats={() => setStatsJar(jar.id)}
             />
           ))}
         </div>
@@ -970,14 +975,14 @@ export const SavingsDashboard: React.FC = () => {
         <InvUpdateModal
           open={!!invUpdateJar}
           onClose={() => setInvUpdateJar(null)}
-          jar={invUpdateJar}
+          jarId={invUpdateJar}
         />
       )}
 
       <InvStatsModal
         open={!!statsJar}
         onClose={() => setStatsJar(null)}
-        jar={statsJar}
+        jarId={statsJar}
       />
     </div>
   )
