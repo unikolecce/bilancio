@@ -21,7 +21,7 @@ export const computeMonthSummary = (month: BudgetMonth): MonthSummary => {
 
   for (const item of month.items) {
     // An item is "settled today" if manually paid OR has a date <= today
-    const settledToday = item.paid || (!!item.date && new Date(item.date) <= today)
+    const settledToday = item.paid || (!!item.date && new Date(item.date + 'T00:00:00') <= today)
 
     if (item.type === 'INCOME') {
       totalIncome += item.amount

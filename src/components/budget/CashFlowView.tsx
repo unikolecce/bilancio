@@ -5,7 +5,7 @@ import { formatCurrency } from '../../utils/currency'
 
 const today = new Date()
 today.setHours(0, 0, 0, 0)
-const isPast = (date?: string) => !!date && new Date(date) <= today
+const isPast = (date?: string) => !!date && new Date(date + 'T00:00:00') <= today
 
 interface CashFlowViewProps {
   month: BudgetMonth
