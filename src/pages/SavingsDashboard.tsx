@@ -281,6 +281,12 @@ interface InvUpdateModalProps {
   jarId: string
 }
 
+const nowDatetimeLocal = () => {
+  const d = new Date()
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
 const InvUpdateModal: React.FC<InvUpdateModalProps> = ({ open, onClose, jarId }) => {
   const addInvestmentUpdate = useAppStore((s) => s.addInvestmentUpdate)
   const settings = useAppStore((s) => s.settings)
@@ -288,14 +294,14 @@ const InvUpdateModal: React.FC<InvUpdateModalProps> = ({ open, onClose, jarId })
   const jar = useAppStore((s) => s.savingsJars.find((j) => j.id === jarId))
 
   const [valueRaw, setValueRaw] = useState('')
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 10))
+  const [datetime, setDatetime] = useState(nowDatetimeLocal())
   const [note, setNote] = useState('')
   const [error, setError] = useState('')
 
   React.useEffect(() => {
     if (!open) return
     setValueRaw('')
-    setDate(new Date().toISOString().slice(0, 10))
+    setDatetime(nowDatetimeLocal())
     setNote('')
     setError('')
   }, [open])
@@ -308,7 +314,7 @@ const InvUpdateModal: React.FC<InvUpdateModalProps> = ({ open, onClose, jarId })
     e.preventDefault()
     if (!isValidAmount(valueRaw)) { setError('Importo non valido'); return }
     addInvestmentUpdate(jar.id, {
-      date,
+      date: datetime,
       value: parseAmount(valueRaw),
       note: note.trim() || undefined,
     })
@@ -318,9 +324,11 @@ const InvUpdateModal: React.FC<InvUpdateModalProps> = ({ open, onClose, jarId })
   return (
     <Modal open={open} onClose={onClose} title={`Aggiorna valore — ${jar.icon} ${jar.name}`} size="sm">
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <p className="text-xs text-slate-500 bg-slate-50 rounded-lg px-3 py-2">
-          Capitale investito: <strong>{formatCurrency(invested, settings.currency)}</strong>
-        </p>
+        {invested > 0 && (
+          <p className="text-xs text-slate-500 bg-slate-50 rounded-lg px-3 py-2">
+            Capitale investito: <strong>{formatCurrency(invested, settings.currency)}</strong>
+          </p>
+        )}
         <Input
           label="Valore attuale del portafoglio"
           value={valueRaw}
@@ -330,7 +338,7 @@ const InvUpdateModal: React.FC<InvUpdateModalProps> = ({ open, onClose, jarId })
           inputMode="decimal"
           autoFocus
         />
-        <Input label="Data" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+        <Input label="Data e ora" type="datetime-local" value={datetime} onChange={(e) => setDatetime(e.target.value)} />
         <Input
           label="Nota (opzionale)"
           value={note}
@@ -371,6 +379,16 @@ const InvStatsModal: React.FC<InvStatsModalProps> = ({ open, onClose, jarId }) =
     [updates, invested]
   )
 
+  // When no deposits/initialValue, use the first update as the cost basis
+  const baseline = invested > 0 ? invested : (updates.length > 0 ? updates[0].value : 0)
+
+  const formatUpdateDatetime = (date: string) => {
+    const d = date.includes('T') ? new Date(date) : new Date(date + 'T00:00:00')
+    const datePart = d.toLocaleDateString('it-IT', { day: 'numeric', month: 'short', year: 'numeric' })
+    const timePart = date.includes('T') ? ` · ${d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}` : ''
+    return datePart + timePart
+  }
+
   if (!jar) return null
 
   return (
@@ -384,13 +402,13 @@ const InvStatsModal: React.FC<InvStatsModalProps> = ({ open, onClose, jarId }) =
           {/* Summary row */}
           {(() => {
             const latest = updates[updates.length - 1]
-            const gain = latest.value - invested
-            const pct = invested > 0 ? (gain / invested) * 100 : 0
+            const gain = latest.value - baseline
+            const pct = baseline > 0 ? (gain / baseline) * 100 : 0
             return (
               <div className="grid grid-cols-3 gap-3 mb-5">
                 <div className="bg-slate-50 rounded-xl p-3 text-center">
-                  <p className="text-xs text-slate-500 mb-1">Investito</p>
-                  <p className="text-sm font-bold text-slate-700">{formatCurrency(invested, settings.currency)}</p>
+                  <p className="text-xs text-slate-500 mb-1">{invested > 0 ? 'Investito' : 'Valore iniziale'}</p>
+                  <p className="text-sm font-bold text-slate-700">{formatCurrency(baseline, settings.currency)}</p>
                 </div>
                 <div className="bg-slate-50 rounded-xl p-3 text-center">
                   <p className="text-xs text-slate-500 mb-1">Valore attuale</p>
@@ -415,7 +433,7 @@ const InvStatsModal: React.FC<InvStatsModalProps> = ({ open, onClose, jarId }) =
               <div className="flex items-end gap-1.5 h-24 mb-1">
                 {updates.map((u) => {
                   const pct = (u.value / maxValue) * 100
-                  const gain = u.value - invested
+                  const gain = u.value - baseline
                   return (
                     <div
                       key={u.id}
@@ -430,7 +448,6 @@ const InvStatsModal: React.FC<InvStatsModalProps> = ({ open, onClose, jarId }) =
                   )
                 })}
               </div>
-              {/* Baseline */}
               <div className="h-px bg-slate-200 mb-1" />
               <div className="flex justify-between text-[10px] text-slate-400">
                 <span>{updates[0].date.slice(0, 7)}</span>
@@ -441,17 +458,24 @@ const InvStatsModal: React.FC<InvStatsModalProps> = ({ open, onClose, jarId }) =
 
           {/* Updates table */}
           <div className="flex flex-col divide-y divide-slate-100 max-h-64 overflow-y-auto">
-            {[...updates].reverse().map((u) => {
-              const gain = u.value - invested
-              const pct = invested > 0 ? (gain / invested) * 100 : 0
+            {[...updates].reverse().map((u, i, arr) => {
+              const gain = u.value - baseline
+              const pct = baseline > 0 ? (gain / baseline) * 100 : 0
+              const prev = arr[i + 1]
+              const delta = prev ? u.value - prev.value : null
               return (
                 <div key={u.id} className="flex items-center gap-3 py-2.5">
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-slate-700">
                       {formatCurrency(u.value, settings.currency)}
+                      {delta != null && (
+                        <span className={`ml-2 text-xs font-normal ${delta >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                          {delta >= 0 ? '+' : ''}{formatCurrency(delta, settings.currency)}
+                        </span>
+                      )}
                     </p>
                     <p className="text-xs text-slate-400">
-                      {new Date(u.date + 'T00:00:00').toLocaleDateString('it-IT', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      {formatUpdateDatetime(u.date)}
                       {u.note && <> · {u.note}</>}
                     </p>
                   </div>
@@ -569,8 +593,12 @@ const JarCard: React.FC<JarCardProps> = ({
   // INVESTIMENTO
   const invested = totalInvested(jar)
   const curValue = currentValue(jar)
-  const gain = curValue != null ? curValue - invested : null
-  const gainPct = gain != null && invested > 0 ? (gain / invested) * 100 : null
+  // If no deposits/initialValue, fall back to earliest snapshot as cost basis
+  const updates = jar.investmentUpdates ?? []
+  const sortedUpdates = [...updates].sort((a, b) => a.date.localeCompare(b.date))
+  const baseline = invested > 0 ? invested : (sortedUpdates.length > 0 ? sortedUpdates[0].value : 0)
+  const gain = curValue != null ? curValue - baseline : null
+  const gainPct = gain != null && baseline > 0 ? (gain / baseline) * 100 : null
 
   return (
     <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
@@ -618,8 +646,8 @@ const JarCard: React.FC<JarCardProps> = ({
         {isInvestment ? (
           <div className="flex flex-col gap-1.5">
             <div className="flex justify-between text-xs text-slate-500">
-              <span>Capitale investito</span>
-              <span className="font-medium tabular-nums">{formatCurrency(invested, settings.currency)}</span>
+              <span>{invested > 0 ? 'Capitale investito' : 'Valore iniziale'}</span>
+              <span className="font-medium tabular-nums">{formatCurrency(baseline, settings.currency)}</span>
             </div>
             <div className="flex justify-between text-xs text-slate-500">
               <span>Valore attuale</span>
