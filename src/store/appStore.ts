@@ -5,6 +5,7 @@ import type {
   BudgetMonth,
   Category,
   Currency,
+  InvestmentUpdate,
   Language,
   SavingsJar,
   SavingsTransaction,
@@ -76,11 +77,13 @@ interface AppActions {
   createNextMonthFromTemplate(monthId: string): string | null
 
   // ── Savings Jars ──────────────────────────────────────────────────────────
-  createJar(jar: Omit<SavingsJar, 'id' | 'transactions' | 'createdAt'>): string
-  updateJar(jarId: string, updates: Partial<Omit<SavingsJar, 'id' | 'transactions' | 'createdAt'>>): void
+  createJar(jar: Omit<SavingsJar, 'id' | 'transactions' | 'investmentUpdates' | 'createdAt'>): string
+  updateJar(jarId: string, updates: Partial<Omit<SavingsJar, 'id' | 'transactions' | 'investmentUpdates' | 'createdAt'>>): void
   deleteJar(jarId: string): void
   addJarTransaction(jarId: string, tx: Omit<SavingsTransaction, 'id' | 'createdAt'>): string
   deleteJarTransaction(jarId: string, txId: string): void
+  addInvestmentUpdate(jarId: string, update: Omit<InvestmentUpdate, 'id' | 'createdAt'>): string
+  deleteInvestmentUpdate(jarId: string, updateId: string): void
 
   // ── Carry-over balance ────────────────────────────────────────────────────
   /**
@@ -105,7 +108,12 @@ const load = (): AppState => {
     months: data.months,
     template: data.template,
     settings: data.settings,
-    savingsJars: data.savingsJars,
+    // Backward-compat: existing jars may lack `type` and `investmentUpdates`
+    savingsJars: data.savingsJars.map((j) => ({
+      ...j,
+      type: j.type ?? 'RISPARMIO',
+      investmentUpdates: j.investmentUpdates ?? [],
+    })),
   }
 }
 
@@ -472,6 +480,31 @@ export const useAppStore = create<AppStore>((set, get) => {
         savingsJars: s.savingsJars.map((j) =>
           j.id === jarId
             ? { ...j, transactions: j.transactions.filter((t) => t.id !== txId) }
+            : j
+        ),
+      }))
+      save()
+    },
+
+    addInvestmentUpdate(jarId, update) {
+      const id = generateId()
+      const newUpdate: InvestmentUpdate = { id, ...update, createdAt: new Date().toISOString() }
+      set((s) => ({
+        savingsJars: s.savingsJars.map((j) =>
+          j.id === jarId
+            ? { ...j, investmentUpdates: [...(j.investmentUpdates ?? []), newUpdate] }
+            : j
+        ),
+      }))
+      save()
+      return id
+    },
+
+    deleteInvestmentUpdate(jarId, updateId) {
+      set((s) => ({
+        savingsJars: s.savingsJars.map((j) =>
+          j.id === jarId
+            ? { ...j, investmentUpdates: (j.investmentUpdates ?? []).filter((u) => u.id !== updateId) }
             : j
         ),
       }))

@@ -87,12 +87,23 @@ export interface SavingsTransaction {
   createdAt: string
 }
 
+export interface InvestmentUpdate {
+  id: string
+  date: string        // YYYY-MM-DD
+  value: number       // total portfolio value at this date
+  note?: string
+  createdAt: string
+}
+
 export interface SavingsJar {
   id: string
   name: string
   color: string
   icon: string        // emoji
-  target?: number     // savings goal, optional
+  type: 'RISPARMIO' | 'INVESTIMENTO'
+  target?: number     // savings goal (RISPARMIO) or target value (INVESTIMENTO)
+  initialValue?: number  // INVESTIMENTO: amount already invested before first use
+  investmentUpdates?: InvestmentUpdate[]
   transactions: SavingsTransaction[]
   createdAt: string
 }
