@@ -180,7 +180,7 @@ export const DashboardMonth: React.FC = () => {
       )}
 
       {/* Quick savings deposit */}
-      <QuickSavingsDeposit />
+      <QuickSavingsDeposit month={budgetMonth} />
 
       {/* Filters + view toggle */}
       <div className="flex flex-col gap-2">

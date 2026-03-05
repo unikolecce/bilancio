@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
-import type { SavingsJar } from '../../models/types'
+import type { BudgetMonth, SavingsJar } from '../../models/types'
 import { useAppStore } from '../../store/appStore'
 import { useTranslation } from '../../i18n/useTranslation'
 import { isValidAmount, parseAmount, formatCurrency } from '../../utils/currency'
@@ -12,11 +12,16 @@ const jarBalance = (jar: SavingsJar) =>
     0
   )
 
-export const QuickSavingsDeposit: React.FC = () => {
+interface QuickSavingsDepositProps {
+  month?: BudgetMonth
+}
+
+export const QuickSavingsDeposit: React.FC<QuickSavingsDepositProps> = ({ month }) => {
   const { t } = useTranslation()
-  const { savingsJars, addJarTransaction, settings } = useAppStore((s) => ({
+  const { savingsJars, addJarTransaction, addItem, settings } = useAppStore((s) => ({
     savingsJars: s.savingsJars,
     addJarTransaction: s.addJarTransaction,
+    addItem: s.addItem,
     settings: s.settings,
   }))
 
@@ -36,12 +41,33 @@ export const QuickSavingsDeposit: React.FC = () => {
     if (!isValidAmount(amountRaw)) { setError('Importo non valido'); return }
     if (!selectedJarId) return
 
+    const amount = parseAmount(amountRaw)
+    const today = new Date().toISOString().slice(0, 10)
+    const jar = savingsJars.find((j) => j.id === selectedJarId)
+
     addJarTransaction(selectedJarId, {
       type: 'DEPOSIT',
-      amount: parseAmount(amountRaw),
+      amount,
       note: note.trim() || undefined,
-      date: new Date().toISOString().slice(0, 10),
+      date: today,
     })
+
+    // Mirror as a paid expense in the current month budget
+    if (month && month.categories.length > 0 && jar) {
+      const savingsCat = month.categories.find((c) =>
+        /risparmio|saving|salvadanaio/i.test(c.name)
+      ) ?? month.categories[0]
+      addItem(month.id, {
+        categoryId: savingsCat.id,
+        name: `${jar.icon} ${jar.name}`,
+        amount,
+        type: 'EXPENSE',
+        date: today,
+        planned: false,
+        paid: true,
+        note: note.trim() || undefined,
+      })
+    }
 
     setAmountRaw('')
     setNote('')
