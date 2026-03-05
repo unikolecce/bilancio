@@ -11,8 +11,8 @@ interface BudgetAlertsProps {
 const AlertCard: React.FC<{
   tone: 'danger' | 'warning'
   title: string
-  description: string
-}> = ({ tone, title, description }) => (
+  items: string[]
+}> = ({ tone, title, items }) => (
   <div
     className={[
       'rounded-xl border px-4 py-3',
@@ -22,7 +22,11 @@ const AlertCard: React.FC<{
     ].join(' ')}
   >
     <p className="text-sm font-semibold">{title}</p>
-    <p className="text-xs mt-1 opacity-90">{description}</p>
+    <ul className="mt-1 flex flex-col gap-0.5">
+      {items.map((name, i) => (
+        <li key={i} className="text-xs opacity-90">· {name}</li>
+      ))}
+    </ul>
   </div>
 )
 
@@ -57,7 +61,7 @@ export const BudgetAlerts: React.FC<BudgetAlertsProps> = ({ month }) => {
         <AlertCard
           tone="danger"
           title={t('alerts.negativeBalanceTitle')}
-          description={`${t('alerts.negativeBalanceDescription')} ${formatCurrency(Math.abs(summary.balance), month.currency)}`}
+          items={[`${t('alerts.negativeBalanceDescription')} ${formatCurrency(Math.abs(summary.balance), month.currency)}`]}
         />
       )}
 
@@ -65,7 +69,7 @@ export const BudgetAlerts: React.FC<BudgetAlertsProps> = ({ month }) => {
         <AlertCard
           tone="danger"
           title={t('alerts.overdueTitle')}
-          description={`${overdue.length} ${t('alerts.itemsDue')}`}
+          items={overdue.map((i) => i.name)}
         />
       )}
 
@@ -73,7 +77,7 @@ export const BudgetAlerts: React.FC<BudgetAlertsProps> = ({ month }) => {
         <AlertCard
           tone="warning"
           title={t('alerts.dueSoonTitle')}
-          description={`${dueSoon.length} ${t('alerts.itemsDue')}`}
+          items={dueSoon.map((i) => i.name)}
         />
       )}
     </div>
