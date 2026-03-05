@@ -3,6 +3,8 @@ import type { InvestmentUpdate, SavingsJar } from '../models/types'
 import { useAppStore } from '../store/appStore'
 import { useTranslation } from '../i18n/useTranslation'
 import { formatCurrency, parseAmount, isValidAmount, amountToInputValue } from '../utils/currency'
+import { computeMonthSummary } from '../utils/calculations'
+import { getCurrentYearMonth } from '../utils/dateUtils'
 import { Modal } from '../components/ui/Modal'
 import { Button } from '../components/ui/Button'
 import { Input, Toggle } from '../components/ui/Input'
@@ -768,6 +770,12 @@ export const SavingsDashboard: React.FC = () => {
     return withUpdates.reduce((s, j) => s + (currentValue(j) ?? 0), 0)
   }, [savingsJars])
 
+  const currentMonthBalance = useAppStore((s) => {
+    const { year, month } = getCurrentYearMonth()
+    const m = s.months.find((mo) => mo.year === year && mo.month === month)
+    return m ? computeMonthSummary(m).todayBalance : null
+  })
+
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6 max-w-4xl mx-auto w-full">
       {/* Header */}
@@ -848,15 +856,29 @@ export const SavingsDashboard: React.FC = () => {
                 )}
               </div>
             )}
+            {/* Saldo mese corrente */}
+            {currentMonthBalance != null && (
+              <div className={`rounded-xl p-3 ${currentMonthBalance >= 0 ? 'bg-sky-50' : 'bg-rose-50'}`}>
+                <p className={`text-xs font-medium mb-1 ${currentMonthBalance >= 0 ? 'text-sky-600' : 'text-rose-600'}`}>
+                  💳 Saldo mese
+                </p>
+                <p className={`text-base font-bold tabular-nums ${currentMonthBalance >= 0 ? 'text-sky-700' : 'text-rose-700'}`}>
+                  {currentMonthBalance >= 0 ? '+' : ''}{formatCurrency(currentMonthBalance, settings.currency)}
+                </p>
+                <p className="text-[10px] text-slate-400 mt-0.5">a oggi</p>
+              </div>
+            )}
+
             {/* Totale patrimonio */}
             {(() => {
-              const patrimonio = totalRisparmio + (totalValoreAttuale ?? totalInvestito)
+              const patrimonio = totalRisparmio + (totalValoreAttuale ?? totalInvestito) + (currentMonthBalance ?? 0)
               return (
                 <div className="bg-indigo-50 rounded-xl p-3">
                   <p className="text-xs text-indigo-600 font-medium mb-1">💎 Totale</p>
                   <p className="text-base font-bold text-indigo-700 tabular-nums">
                     {formatCurrency(patrimonio, settings.currency)}
                   </p>
+                  <p className="text-[10px] text-slate-400 mt-0.5">risparmi + inv. + mese</p>
                 </div>
               )
             })()}
