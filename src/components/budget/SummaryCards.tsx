@@ -307,9 +307,15 @@ export const SummaryCards: React.FC<SummaryCardsProps> = ({ month }) => {
             </span>
           </div>
           <div className="flex justify-between text-sm">
-            <span className="text-slate-500">Uscite totali</span>
+            <span className="text-slate-500">Uscite già pagate</span>
             <span className="font-semibold text-rose-600 tabular-nums">
-              −{formatCurrency(s.totalExpenses, month.currency)}
+              −{formatCurrency(s.paidExpenses, month.currency)}
+            </span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-slate-500">Uscite ancora da pagare</span>
+            <span className="font-semibold text-orange-500 tabular-nums">
+              −{formatCurrency(s.totalExpenses - s.paidExpenses, month.currency)}
             </span>
           </div>
           <div className="flex justify-between text-sm font-bold pt-2 mt-1 border-t border-slate-200">
