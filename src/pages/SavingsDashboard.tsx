@@ -365,21 +365,18 @@ interface InvStatsModalProps {
 const InvStatsModal: React.FC<InvStatsModalProps> = ({ open, onClose, jarId }) => {
   const settings = useAppStore((s) => s.settings)
   const deleteInvestmentUpdate = useAppStore((s) => s.deleteInvestmentUpdate)
+  // Live selector — always fresh after addInvestmentUpdate / deleteInvestmentUpdate
   const jar = useAppStore((s) => s.savingsJars.find((j) => j.id === jarId) ?? null)
 
-  const updates = useMemo(() => {
-    if (!jar) return []
-    return [...(jar.investmentUpdates ?? [])].sort((a, b) => a.date.localeCompare(b.date))
-  }, [jar])
+  // Compute directly (no memo) so it's always in sync with the live jar
+  const updates = jar
+    ? [...(jar.investmentUpdates ?? [])].sort((a, b) => a.date.localeCompare(b.date))
+    : []
 
   const invested = jar ? totalInvested(jar) : 0
+  const maxValue = updates.length > 0 ? Math.max(...updates.map((u) => u.value), invested, 1) : 1
 
-  const maxValue = useMemo(
-    () => Math.max(...updates.map((u) => u.value), invested, 1),
-    [updates, invested]
-  )
-
-  // When no deposits/initialValue, use the first update as the cost basis
+  // Cost basis: use initialValue+deposits when set, otherwise the oldest snapshot
   const baseline = invested > 0 ? invested : (updates.length > 0 ? updates[0].value : 0)
 
   const formatUpdateDatetime = (date: string) => {
@@ -483,7 +480,8 @@ const InvStatsModal: React.FC<InvStatsModalProps> = ({ open, onClose, jarId }) =
                     {gain >= 0 ? '+' : ''}{pct.toFixed(2)}%
                   </span>
                   <button
-                    onClick={() => deleteInvestmentUpdate(jar.id, u.id)}
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); deleteInvestmentUpdate(jar.id, u.id) }}
                     className="p-1 text-slate-300 hover:text-rose-400 transition-colors shrink-0"
                   >
                     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -771,10 +769,8 @@ const JarCard: React.FC<JarCardProps> = ({
 
 export const SavingsDashboard: React.FC = () => {
   const { t } = useTranslation()
-  const { savingsJars, deleteJar } = useAppStore((s) => ({
-    savingsJars: s.savingsJars,
-    deleteJar: s.deleteJar,
-  }))
+  const savingsJars = useAppStore((s) => s.savingsJars)
+  const deleteJar = useAppStore((s) => s.deleteJar)
 
   const [jarFormOpen, setJarFormOpen] = useState(false)
   const [editingJar, setEditingJar] = useState<SavingsJar | null>(null)
