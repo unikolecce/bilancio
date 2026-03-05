@@ -39,13 +39,6 @@ export const BudgetAlerts: React.FC<BudgetAlertsProps> = ({ month }) => {
   const in3Days = new Date(today)
   in3Days.setDate(in3Days.getDate() + 3)
 
-  const overdue = month.items.filter((item) => {
-    if (item.type !== 'EXPENSE' || !item.planned || item.paid || !item.date) return false
-    const d = new Date(item.date)
-    d.setHours(0, 0, 0, 0)
-    return d < today
-  })
-
   const dueSoon = month.items.filter((item) => {
     if (item.type !== 'EXPENSE' || !item.planned || item.paid || !item.date) return false
     const d = new Date(item.date)
@@ -53,7 +46,7 @@ export const BudgetAlerts: React.FC<BudgetAlertsProps> = ({ month }) => {
     return d >= today && d <= in3Days
   })
 
-  if (summary.balance >= 0 && overdue.length === 0 && dueSoon.length === 0) return null
+  if (summary.balance >= 0 && dueSoon.length === 0) return null
 
   return (
     <div className="flex flex-col gap-2">
@@ -62,14 +55,6 @@ export const BudgetAlerts: React.FC<BudgetAlertsProps> = ({ month }) => {
           tone="danger"
           title={t('alerts.negativeBalanceTitle')}
           items={[`${t('alerts.negativeBalanceDescription')} ${formatCurrency(Math.abs(summary.balance), month.currency)}`]}
-        />
-      )}
-
-      {overdue.length > 0 && (
-        <AlertCard
-          tone="danger"
-          title={t('alerts.overdueTitle')}
-          items={overdue.map((i) => i.name)}
         />
       )}
 
